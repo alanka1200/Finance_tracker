@@ -142,9 +142,10 @@ async def update_transaction(
 @router.delete("/{tx_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_transaction(
     user: CurrentUser, db: DbSession, tx_id: int
-) -> None:
+):
     svc = TransactionService(db)
     deleted = await svc.delete(user.id, tx_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="транзакция не найдена")
     await db.commit()
+    return None
