@@ -68,8 +68,9 @@ async def update_investment(
 @router.delete("/{inv_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_investment(
     user: CurrentUser, db: DbSession, inv_id: int
-) -> None:
+):
     svc = InvestmentService(db)
     if not await svc.delete(user.id, inv_id):
         raise HTTPException(status_code=404, detail="инвестиция не найдена")
     await db.commit()
+    return None
