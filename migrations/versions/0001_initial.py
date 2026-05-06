@@ -19,16 +19,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # === ENUM типы ===
-    op.execute("CREATE TYPE category_kind AS ENUM ('income', 'expense')")
-    op.execute("CREATE TYPE transaction_kind AS ENUM ('income', 'expense')")
-    op.execute("CREATE TYPE goal_status AS ENUM ('active', 'completed', 'archived')")
-    op.execute("CREATE TYPE goal_priority AS ENUM ('1', '2', '3')")
-    op.execute(
-        "CREATE TYPE investment_type AS ENUM "
-        "('stock', 'bond', 'crypto', 'deposit', 'real_estate', 'other')"
-    )
-    op.execute("CREATE TYPE referral_status AS ENUM ('pending', 'confirmed')")
+    # === ENUM типы (с защитой от повторного создания) ===
+    op.execute("DO $$ BEGIN CREATE TYPE category_kind AS ENUM ('income', 'expense'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE transaction_kind AS ENUM ('income', 'expense'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE goal_status AS ENUM ('active', 'completed', 'archived'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE goal_priority AS ENUM ('1', '2', '3'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE investment_type AS ENUM ('stock', 'bond', 'crypto', 'deposit', 'real_estate', 'other'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE referral_status AS ENUM ('pending', 'confirmed'); EXCEPTION WHEN duplicate_object THEN null; END $$;")
 
     # === users ===
     op.create_table(
