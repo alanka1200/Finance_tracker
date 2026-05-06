@@ -93,8 +93,9 @@ async def contribute_to_goal(
 
 
 @router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_goal(user: CurrentUser, db: DbSession, goal_id: int) -> None:
+async def delete_goal(user: CurrentUser, db: DbSession, goal_id: int):
     svc = GoalService(db)
     if not await svc.delete(user.id, goal_id):
         raise HTTPException(status_code=404, detail="цель не найдена")
     await db.commit()
+    return None
