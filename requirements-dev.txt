@@ -1,0 +1,14 @@
+-r requirements.txt
+
+# --- Тесты ---
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+
+# --- Линтинг / форматирование ---
+ruff==0.8.6
+mypy==1.14.1
+
+# --- Локальная разработка ---
+ipython==8.31.0
+watchfiles==1.0.4

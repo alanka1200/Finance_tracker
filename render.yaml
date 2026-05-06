@@ -1,0 +1,38 @@
+# =============================================================
+# render.yaml — конфигурация для Render.com (Blueprint Deploy).
+# Загрузи репо в GitHub, в Render выбери "Blueprint" — он сам подхватит.
+# =============================================================
+
+services:
+  - type: web
+    name: finance-tracker-bot
+    runtime: docker
+    plan: free  # free | starter ($7/mo)
+    region: frankfurt  # ближе к Москве
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false  # задаётся вручную в дашборде Render
+      - key: WEBHOOK_SECRET
+        generateValue: true  # Render сгенерит автоматически
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PUBLIC_URL
+        value: https://finance-tracker-bot.onrender.com  # подмени на свой домен
+      - key: FRONTEND_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false  # из Neon
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: TELEGRAM_INITDATA_TTL_SECONDS
+        value: 86400
+      - key: ADMIN_TELEGRAM_IDS
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

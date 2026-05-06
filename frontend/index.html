@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#40a7e3">
+    <title>💰 Финансовый Трекер</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Стартовый лоадер -->
+<div id="splash" class="splash">
+    <div class="splash-content">
+        <div class="splash-logo">💰</div>
+        <h1>Финансовый Трекер</h1>
+        <div class="splash-loader">
+            <div class="splash-loader-bar"></div>
+        </div>
+        <p id="splashStatus">Загружаем твои данные...</p>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="header" id="header">
+    <div class="header-inner">
+        <h1><i class="fas fa-wallet"></i> Финансовый Трекер</h1>
+        <div class="header-meta">
+            <span id="currentDate"></span>
+            <span id="userName" class="user-name"></span>
+        </div>
+    </div>
+</header>
+
+<!-- Главный контейнер -->
+<main class="container" id="app" hidden>
+    <!-- ===== Главная вкладка ===== -->
+    <section class="page" id="page-dashboard" data-page="dashboard">
+
+        <!-- Карточка баланса -->
+        <div class="balance-card glow-card">
+            <div class="balance-card-header">
+                <span class="balance-label">Баланс</span>
+                <button class="icon-btn" id="toggleBalance" title="Скрыть/показать">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div class="balance-amount" id="balanceAmount">— ₽</div>
+            <div class="balance-row">
+                <div class="balance-stat">
+                    <i class="fas fa-arrow-up income-color"></i>
+                    <div>
+                        <div class="balance-stat-label">Доход за месяц</div>
+                        <div class="balance-stat-value" id="monthIncome">0 ₽</div>
+                    </div>
+                </div>
+                <div class="balance-stat">
+                    <i class="fas fa-arrow-down expense-color"></i>
+                    <div>
+                        <div class="balance-stat-label">Расход за месяц</div>
+                        <div class="balance-stat-value" id="monthExpense">0 ₽</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Быстрые действия -->
+        <div class="quick-actions">
+            <button class="quick-action income" onclick="ui.openTxModal('income')">
+                <i class="fas fa-plus"></i>
+                <span>Доход</span>
+            </button>
+            <button class="quick-action expense" onclick="ui.openTxModal('expense')">
+                <i class="fas fa-minus"></i>
+                <span>Расход</span>
+            </button>
+            <button class="quick-action goal" onclick="ui.openGoalModal()">
+                <i class="fas fa-bullseye"></i>
+                <span>Цель</span>
+            </button>
+            <button class="quick-action invest" onclick="ui.openInvestmentModal()">
+                <i class="fas fa-chart-line"></i>
+                <span>Актив</span>
+            </button>
+        </div>
+
+        <!-- AI Совет -->
+        <div class="advice-card" id="adviceCard">
+            <div class="advice-header">
+                <i class="fas fa-lightbulb"></i>
+                <span>Совет дня</span>
+                <button class="icon-btn" id="refreshAdvice" title="Обновить">
+                    <i class="fas fa-rotate"></i>
+                </button>
+            </div>
+            <div class="advice-body" id="adviceBody">
+                <div class="skeleton" style="height: 60px;"></div>
+            </div>
+        </div>
+
+        <!-- Тренд за 30 дней -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-area"></i>
+                <span>Тренд за 30 дней</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Топ категорий расходов -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i>
+                <span>Топ расходов в этом месяце</span>
+            </div>
+            <div class="chart-container chart-doughnut">
+                <canvas id="expenseChart"></canvas>
+            </div>
+            <div class="categories-list" id="topCategoriesList"></div>
+        </div>
+
+        <!-- Виджеты статистики -->
+        <div class="stats-grid">
+            <div class="stat-widget">
+                <i class="fas fa-receipt"></i>
+                <div class="stat-value" id="statTransactions">0</div>
+                <div class="stat-label">Транзакций</div>
+            </div>
+            <div class="stat-widget">
+                <i class="fas fa-bullseye"></i>
+                <div class="stat-value" id="statGoals">0</div>
+                <div class="stat-label">Целей</div>
+            </div>
+            <div class="stat-widget">
+                <i class="fas fa-chart-line"></i>
+                <div class="stat-value" id="statInvestments">0 ₽</div>
+                <div class="stat-label">Инвестиции</div>
+            </div>
+            <div class="stat-widget">
+                <i class="fas fa-user-friends"></i>
+                <div class="stat-value" id="statReferrals">0</div>
+                <div class="stat-label">Рефералов</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Транзакции ===== -->
+    <section class="page" id="page-transactions" data-page="transactions" hidden>
+        <h2 class="page-title"><i class="fas fa-list"></i> Транзакции</h2>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter-kind="all">Все</button>
+            <button class="filter-btn" data-filter-kind="income">Доходы</button>
+            <button class="filter-btn" data-filter-kind="expense">Расходы</button>
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск...">
+        </div>
+
+        <div class="transactions-list" id="transactionsList"></div>
+        <button class="btn btn-secondary" id="loadMoreBtn" style="display:none;">
+            Показать ещё
+        </button>
+    </section>
+
+    <!-- ===== Цели ===== -->
+    <section class="page" id="page-goals" data-page="goals" hidden>
+        <h2 class="page-title"><i class="fas fa-bullseye"></i> Финансовые цели</h2>
+        <button class="btn btn-primary btn-block" onclick="ui.openGoalModal()">
+            <i class="fas fa-plus"></i> Новая цель
+        </button>
+        <div class="goals-list" id="goalsList"></div>
+    </section>
+
+    <!-- ===== Инвестиции ===== -->
+    <section class="page" id="page-investments" data-page="investments" hidden>
+        <h2 class="page-title"><i class="fas fa-chart-line"></i> Инвестиции</h2>
+        <button class="btn btn-primary btn-block" onclick="ui.openInvestmentModal()">
+            <i class="fas fa-plus"></i> Добавить актив
+        </button>
+        <div class="investments-list" id="investmentsList"></div>
+    </section>
+
+    <!-- ===== Профиль ===== -->
+    <section class="page" id="page-profile" data-page="profile" hidden>
+        <h2 class="page-title"><i class="fas fa-user"></i> Профиль</h2>
+
+        <div class="profile-card">
+            <div class="profile-avatar" id="profileAvatar">👤</div>
+            <div class="profile-name" id="profileName">—</div>
+            <div class="profile-username" id="profileUsername">—</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-user-friends"></i> Реферальная программа</div>
+            <div id="referralBox" style="padding: 16px;">
+                <p style="margin-bottom: 12px;">Поделись приложением с друзьями и помоги им стать финансово грамотными:</p>
+                <div class="referral-code-box">
+                    <code id="referralCode">—</code>
+                    <button class="icon-btn" id="copyReferralBtn" title="Скопировать">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <button class="btn btn-primary btn-block" id="shareReferralBtn">
+                    <i class="fas fa-share"></i> Поделиться
+                </button>
+                <div class="ref-stats">
+                    <div><strong id="refTotal">0</strong><span>Приглашено</span></div>
+                    <div><strong id="refConfirmed">0</strong><span>Активных</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-download"></i> Экспорт данных</div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-secondary" id="exportCsvBtn">
+                    <i class="fas fa-file-csv"></i> Экспорт в CSV
+                </button>
+                <button class="btn btn-secondary" id="exportJsonBtn">
+                    <i class="fas fa-file-code"></i> Полный дамп (JSON)
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-info-circle"></i> О приложении</div>
+            <div style="padding: 16px; line-height: 1.7;">
+                <div>Версия: <strong>1.0.0</strong></div>
+                <div>Сделано с ❤️ для тех, кто хочет финансовую свободу.</div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Нижняя навигация -->
+<nav class="bottom-nav" id="bottomNav" hidden>
+    <button class="nav-item active" data-nav="dashboard">
+        <i class="fas fa-home"></i>
+        <span>Главная</span>
+    </button>
+    <button class="nav-item" data-nav="transactions">
+        <i class="fas fa-list"></i>
+        <span>История</span>
+    </button>
+    <button class="nav-item" data-nav="goals">
+        <i class="fas fa-bullseye"></i>
+        <span>Цели</span>
+    </button>
+    <button class="nav-item" data-nav="investments">
+        <i class="fas fa-chart-line"></i>
+        <span>Активы</span>
+    </button>
+    <button class="nav-item" data-nav="profile">
+        <i class="fas fa-user"></i>
+        <span>Профиль</span>
+    </button>
+</nav>
+
+<!-- ============== МОДАЛКИ ============== -->
+
+<!-- Транзакция -->
+<div class="modal" id="txModal">
+    <div class="modal-content">
+        <h2 id="txModalTitle"><i class="fas fa-plus"></i> Новая транзакция</h2>
+
+        <div class="form-group">
+            <label class="form-label">Сумма</label>
+            <div class="amount-input-wrapper">
+                <input type="text" id="txAmount" class="form-input amount-input" inputmode="decimal" placeholder="0">
+                <span class="currency-symbol">₽</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Категория</label>
+            <div class="category-grid" id="txCategoryGrid"></div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Описание (необязательно)</label>
+            <input type="text" id="txDescription" class="form-input" placeholder="Например: Кофе с другом">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Дата</label>
+            <input type="datetime-local" id="txDate" class="form-input">
+        </div>
+
+        <input type="hidden" id="txKind">
+        <input type="hidden" id="txCategoryId">
+        <input type="hidden" id="txEditId">
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="txSubmit"><i class="fas fa-check"></i> Сохранить</button>
+            <button class="btn btn-danger" id="txDelete" hidden><i class="fas fa-trash"></i> Удалить</button>
+            <button class="btn" onclick="ui.closeModal('txModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<!-- Цель -->
+<div class="modal" id="goalModal">
+    <div class="modal-content">
+        <h2 id="goalModalTitle"><i class="fas fa-bullseye"></i> Новая цель</h2>
+
+        <div class="form-group">
+            <label class="form-label">Название</label>
+            <input type="text" id="goalTitle" class="form-input" placeholder="Например: Новая машина">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Целевая сумма</label>
+            <div class="amount-input-wrapper">
+                <input type="text" id="goalTargetAmount" class="form-input amount-input" inputmode="decimal" placeholder="500 000">
+                <span class="currency-symbol">₽</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Уже накоплено</label>
+            <div class="amount-input-wrapper">
+                <input type="text" id="goalCurrentAmount" class="form-input amount-input" inputmode="decimal" placeholder="0">
+                <span class="currency-symbol">₽</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Срок (необязательно)</label>
+            <input type="date" id="goalDeadline" class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Иконка</label>
+            <div class="emoji-picker">
+                <button class="emoji-btn" data-emoji="🎯">🎯</button>
+                <button class="emoji-btn" data-emoji="🏠">🏠</button>
+                <button class="emoji-btn" data-emoji="🚗">🚗</button>
+                <button class="emoji-btn" data-emoji="✈️">✈️</button>
+                <button class="emoji-btn" data-emoji="🎓">🎓</button>
+                <button class="emoji-btn" data-emoji="💍">💍</button>
+                <button class="emoji-btn" data-emoji="📱">📱</button>
+                <button class="emoji-btn" data-emoji="💼">💼</button>
+            </div>
+        </div>
+
+        <input type="hidden" id="goalIcon" value="🎯">
+        <input type="hidden" id="goalEditId">
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="goalSubmit"><i class="fas fa-check"></i> Сохранить</button>
+            <button class="btn btn-danger" id="goalDelete" hidden><i class="fas fa-trash"></i> Удалить</button>
+            <button class="btn" onclick="ui.closeModal('goalModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<!-- Пополнение цели -->
+<div class="modal" id="contributeModal">
+    <div class="modal-content">
+        <h2><i class="fas fa-plus-circle"></i> Пополнить цель</h2>
+
+        <div class="form-group">
+            <label class="form-label">Сумма пополнения</label>
+            <div class="amount-input-wrapper">
+                <input type="text" id="contributeAmount" class="form-input amount-input" inputmode="decimal" placeholder="1 000">
+                <span class="currency-symbol">₽</span>
+            </div>
+        </div>
+
+        <input type="hidden" id="contributeGoalId">
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="contributeSubmit"><i class="fas fa-check"></i> Пополнить</button>
+            <button class="btn" onclick="ui.closeModal('contributeModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<!-- Инвестиция -->
+<div class="modal" id="investmentModal">
+    <div class="modal-content">
+        <h2 id="investmentModalTitle"><i class="fas fa-chart-line"></i> Новая инвестиция</h2>
+
+        <div class="form-group">
+            <label class="form-label">Тип актива</label>
+            <select id="investmentType" class="form-input">
+                <option value="stock">📈 Акции</option>
+                <option value="bond">📜 Облигации</option>
+                <option value="crypto">₿ Криптовалюта</option>
+                <option value="deposit">🏦 Депозит</option>
+                <option value="real_estate">🏠 Недвижимость</option>
+                <option value="other">💎 Другое</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Название</label>
+            <input type="text" id="investmentName" class="form-input" placeholder="Например: Сбербанк">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Тикер (если есть)</label>
+            <input type="text" id="investmentTicker" class="form-input" placeholder="SBER, BTC, AAPL">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Сумма вложения</label>
+            <div class="amount-input-wrapper">
+                <input type="text" id="investmentAmount" class="form-input amount-input" inputmode="decimal" placeholder="100 000">
+                <span class="currency-symbol">₽</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Дата покупки</label>
+            <input type="date" id="investmentDate" class="form-input">
+        </div>
+
+        <input type="hidden" id="investmentEditId">
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="investmentSubmit"><i class="fas fa-check"></i> Сохранить</button>
+            <button class="btn btn-danger" id="investmentDelete" hidden><i class="fas fa-trash"></i> Удалить</button>
+            <button class="btn" onclick="ui.closeModal('investmentModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast уведомления -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Скрипты в правильном порядке -->
+ <script>window.API_BASE_URL = 'https://finance-tracker-bot.onrender.com';</script>
+<script src="api.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

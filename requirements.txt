@@ -1,0 +1,40 @@
+# =============================================================
+# Финансовый трекер — Python зависимости
+# Версии зафиксированы для воспроизводимости.
+# Установка: pip install -r requirements.txt
+# =============================================================
+
+# --- FastAPI ядро ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# --- База данных ---
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+greenlet==3.1.1
+
+# --- Telegram ---
+python-telegram-bot[webhooks]==21.10
+
+# --- Безопасность ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.20
+
+# --- HTTP клиент (для market data, LLM API) ---
+httpx==0.28.1
+
+# --- Утилиты ---
+python-dateutil==2.9.0.post0
+orjson==3.10.13
+loguru==0.7.3
+
+# --- Опциональные: разработка ---
+# pytest==8.3.4
+# pytest-asyncio==0.25.2
+# pytest-cov==6.0.0
+# httpx[http2]==0.28.1
+# ruff==0.8.6
