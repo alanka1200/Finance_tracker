@@ -43,8 +43,9 @@ async def update_category(
 
 
 @router.delete("/{cat_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_category(user: CurrentUser, db: DbSession, cat_id: int) -> None:
+async def delete_category(user: CurrentUser, db: DbSession, cat_id: int):
     svc = CategoryService(db)
     if not await svc.delete(user.id, cat_id):
         raise HTTPException(status_code=404, detail="категория не найдена")
     await db.commit()
+    return None
