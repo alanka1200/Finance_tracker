@@ -23,7 +23,7 @@ class CategoryKind(str, Enum):
 
 
 class Category(Base, IntPK, TimestampMixin, SoftDeleteMixin):
-    """Категория транзакции. Бывает кастомная или системная (предзаданная)."""
+    """Категория транзакции."""
 
     user_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -39,16 +39,13 @@ class Category(Base, IntPK, TimestampMixin, SoftDeleteMixin):
         index=True,
     )
 
-    # Эмодзи или иконка для UI
     icon: Mapped[str] = mapped_column(String(8), default="💰", nullable=False)
-    # Hex цвет: #RRGGBB
     color: Mapped[str] = mapped_column(String(7), default="#40a7e3", nullable=False)
 
-    # Системная категория не редактируется пользователем
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     sort_order: Mapped[int] = mapped_column(default=0, nullable=False)
 
-    # Связи
+    # СВЯЗИ — с явным foreign_keys для transactions
     user: Mapped["User"] = relationship(back_populates="categories")
     transactions: Mapped[list["Transaction"]] = relationship(
         back_populates="category",
@@ -68,15 +65,13 @@ class Category(Base, IntPK, TimestampMixin, SoftDeleteMixin):
         return f"<Category {self.icon} {self.name} ({self.kind.value})>"
 
 
-# Дефолтные категории — создаются автоматически при регистрации пользователя.
+# Дефолтные категории
 DEFAULT_CATEGORIES: list[dict[str, str | CategoryKind]] = [
-    # Доходы
     {"name": "Зарплата", "kind": CategoryKind.INCOME, "icon": "💼", "color": "#4CAF50"},
     {"name": "Фриланс", "kind": CategoryKind.INCOME, "icon": "💻", "color": "#8BC34A"},
     {"name": "Подарки", "kind": CategoryKind.INCOME, "icon": "🎁", "color": "#CDDC39"},
     {"name": "Инвестиции", "kind": CategoryKind.INCOME, "icon": "📈", "color": "#009688"},
     {"name": "Прочее", "kind": CategoryKind.INCOME, "icon": "💵", "color": "#4DB6AC"},
-    # Расходы
     {"name": "Продукты", "kind": CategoryKind.EXPENSE, "icon": "🛒", "color": "#F44336"},
     {"name": "Кафе", "kind": CategoryKind.EXPENSE, "icon": "🍔", "color": "#FF5722"},
     {"name": "Транспорт", "kind": CategoryKind.EXPENSE, "icon": "🚗", "color": "#FF9800"},
