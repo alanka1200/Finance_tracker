@@ -50,7 +50,10 @@ class Category(Base, IntPK, TimestampMixin, SoftDeleteMixin):
 
     # Связи
     user: Mapped["User"] = relationship(back_populates="categories")
-    transactions: Mapped[list["Transaction"]] = relationship(back_populates="category")
+    transactions: Mapped[list["Transaction"]] = relationship(
+        back_populates="category",
+        foreign_keys="Transaction.category_id",
+    )
 
     __table_args__ = (
         Index(
