@@ -30,11 +30,7 @@ class TransactionKind(str, Enum):
 
 
 class Transaction(Base, IntPK, TimestampMixin, SoftDeleteMixin):
-    """Доход или расход.
-
-    Сумма хранится в NUMERIC(19,4) для точности.
-    Валюта отдельной колонкой (мульти-валютная поддержка).
-    """
+    """Доход или расход."""
 
     user_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -56,15 +52,12 @@ class Transaction(Base, IntPK, TimestampMixin, SoftDeleteMixin):
         index=True,
     )
 
-    # NUMERIC(19,4) — точность до 4 знаков после запятой,
-    # достаточно для любых валют включая JPY, BHD и крипту до 0.0001 BTC.
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
     currency: Mapped[str] = mapped_column(String(8), default="RUB", nullable=False)
 
     description: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    tags: Mapped[str | None] = mapped_column(String(256), nullable=True)  # CSV из тегов
+    tags: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
-    # Когда фактически произошла транзакция (может отличаться от created_at)
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -72,17 +65,17 @@ class Transaction(Base, IntPK, TimestampMixin, SoftDeleteMixin):
         index=True,
     )
 
-    # Связи
-    user: Mapped["User"] = relationship(back_populates="transactions")
+    # СВЯЗИ — с явным указанием foreign_keys, чтобы SQLAlchemy не путался
+    user: Mapped["User"] = relationship(
+        back_populates="transactions",
+        foreign_keys=[user_id],
+    )
     category: Mapped["Category | None"] = relationship(
         back_populates="transactions",
-        foreign_keys="[Transaction.category_id]",
+        foreign_keys=[category_id],
     )
 
     __table_args__ = (
-        # ГЛАВНЫЙ индекс: основной запрос — "транзакции пользователя за период".
-        # Equality (user_id) идёт первым, range (occurred_at) — вторым.
-        # DESC + partial WHERE deleted_at IS NULL даёт максимум скорости.
         Index(
             "ix_transactions_user_date",
             "user_id",
