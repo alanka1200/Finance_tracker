@@ -74,7 +74,10 @@ class Transaction(Base, IntPK, TimestampMixin, SoftDeleteMixin):
 
     # Связи
     user: Mapped["User"] = relationship(back_populates="transactions")
-    category: Mapped["Category | None"] = relationship(back_populates="transactions")
+    category: Mapped["Category | None"] = relationship(
+        back_populates="transactions",
+        foreign_keys=[category_id],
+    )
 
     __table_args__ = (
         # ГЛАВНЫЙ индекс: основной запрос — "транзакции пользователя за период".
