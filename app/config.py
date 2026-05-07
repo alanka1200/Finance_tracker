@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     # === Прочее ===
     environment: Literal["development", "production", "test"] = "development"
     log_level: Literal["debug", "info", "warning", "error"] = "info"
-    cors_origins: str = "http://localhost:3000,https://web.telegram.org"
+    cors_origins: str = "http://localhost:3000,https://web.telegram.org,https://alanka1200.github.io,https://telegram.org"
 
     @field_validator("database_url")
     @classmethod
