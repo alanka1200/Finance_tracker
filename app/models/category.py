@@ -24,6 +24,8 @@ class CategoryKind(str, Enum):
 
 class Category(Base, IntPK, TimestampMixin, SoftDeleteMixin):
     """Категория транзакции."""
+    
+    __tablename__ = "categories"
 
     user_id: Mapped[int] = mapped_column(
         BigInteger,
